@@ -1,7 +1,7 @@
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
 
-const form = document.querySelector('form')
+const form = document.querySelector('#chat_form');
 const chatContainer = document.querySelector('#chat_container')
 
 let loadInterval
@@ -186,7 +186,7 @@ function getConversationFromChat() {
 }
 
 // Attach a submit event listener to the form
-const form = document.querySelector('form');
+form = document.querySelector('form');
 form.addEventListener('submit', (event) => {
   // Prevent the default form submission behavior
   event.preventDefault();
