@@ -71,109 +71,6 @@ const handleSubmit = async (e) => {
   e.preventDefault()
 
   const data = new FormData(form)
-  const previousMessage = data.get('prompt')
-
-  // user's chatstripe
-  chatContainer.innerHTML += chatStripe(false, previousMessage)
-
-  // to clear the textarea input 
-  form.reset()
-
-  // bot's chatstripe
-  const uniqueId = generateUniqueId()
-  chatContainer.innerHTML += chatStripe(true, ' ', uniqueId)
-
-  // to focus scroll to the bottom 
-  chatContainer.scrollTop = chatContainer.scrollHeight
-
-  // specific message div 
-  const messageDiv = document.getElementById(uniqueId)
-
-  // messageDiv.innerHTML = "..."
-  loader(messageDiv)
-
-  const response = await fetch('https://codex-1z8x.onrender.com', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      prompt: previousMessage,
-    }),
-  })
-
-  clearInterval(loadInterval)
-  messageDiv.innerHTML = ' '
-
-  if (response.ok) {
-    const data = await response.json()
-    const parsedData = data.bot.trim() // trims any trailing spaces/'\n'
-
-    typeText(messageDiv, parsedData)
-
-    storeConversation() // Store the conversation in local storage after each message is sent/received
-  } else {
-    const err = await response.text()
-
-    messageDiv.innerHTML = 'Something went wrong'
-    alert(err)
-  }
-}
-
-form.addEventListener('submit', handleSubmit)
-form.addEventListener('keyup', (e) => {
-  if (e.keyCode === 13) {
-    handleSubmit(e)
-  }
-})
-
-// Restore the conversation from local storage on page load
-const conversation = localStorage.getItem('conversation')
-if (conversation) {
-  chatContainer.innerHTML = conversation
-
-  // Scroll to the bottom of the chat container
-  chatContainer.scrollTop = chatContainer.scrollHeight
-
-  // Loop through each message div and apply the typing effect to the bot's messages
-  const botMessages = chatContainer.querySelectorAll('.ai .message')
-  botMessages.forEach((message) => {
-    const uniqueId = message.id
-    loader(message)
-
-    setTimeout(async () => {
-      const response = await fetch('https://codex-1z8x.onrender.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: message.textContent,
-        }),
-      })
-
-      clearInterval(loadInterval)
-      message.innerHTML = ' '
-
-      if (response.ok) {
-        const data = await response.json()
-        const parsedData = data.bot.trim() // trims any trailing spaces/'\n'
-
-        typeText(message, parsedData)
-      } else {
-        const err = await response.text()
-
-        message.innerHTML = 'Something went wrong'
-        alert(err)
-      }
-    }, 1000)
-  })
-}
-
-const handleSubmit = async (e) => {
-  e.preventDefault()
-
-  const data = new FormData(form)
 
   // user's chatstripe
   chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
@@ -228,3 +125,82 @@ form.addEventListener('keyup', (e) => {
     handleSubmit(e)
   }
 })
+
+// Restore the conversation from local storage on page load
+window.addEventListener('load', () => {
+  const conversation = JSON.parse(localStorage.getItem('conversation')) || [];
+  conversation.forEach(({ isUser, message }) => {
+    if (isUser) {
+      addMessageToChat(message, 'user');
+    } else {
+      addMessageToChat(message, 'bot');
+    }
+  });
+});
+
+// Save the conversation to local storage
+function saveConversationToLocalStorage() {
+  const conversation = getConversationFromChat();
+  localStorage.setItem('conversation', JSON.stringify(conversation));
+}
+
+// Send a message to the bot
+function sendMessageToBot(message) {
+  // Send the message to the server using fetch or XHR
+  // ...
+  // When the response comes back, add the bot's response to the chat
+  const botResponse = 'This is a dummy response from the bot';
+  addMessageToChat(botResponse, 'bot');
+  // Save the conversation to local storage
+  saveConversationToLocalStorage();
+}
+
+// Add a message to the chat
+function addMessageToChat(message, sender) {
+  // Create a new message element
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+  messageElement.classList.add(sender);
+
+  // Set the message text
+  const messageText = document.createElement('div');
+  messageText.classList.add('message-text');
+  messageText.textContent = message;
+  messageElement.appendChild(messageText);
+
+  // Add the message element to the chat
+  const chat = document.querySelector('#chat');
+  chat.appendChild(messageElement);
+}
+
+// Get the conversation from the chat
+function getConversationFromChat() {
+  const conversation = [];
+  const messages = document.querySelectorAll('.message');
+  messages.forEach((message) => {
+    const isUser = message.classList.contains('user');
+    const messageText = message.querySelector('.message-text').textContent;
+    conversation.push({ isUser, message: messageText });
+  });
+  return conversation;
+}
+
+// Attach a submit event listener to the form
+const form = document.querySelector('form');
+form.addEventListener('submit', (event) => {
+  // Prevent the default form submission behavior
+  event.preventDefault();
+
+  // Get the user's message from the input field
+  const input = document.querySelector('#input');
+  const message = input.value.trim();
+
+  // Add the user's message to the chat
+  addMessageToChat(message, 'user');
+
+  // Send the message to the bot
+  sendMessageToBot(message);
+
+  // Clear the input field
+  input.value = '';
+});
