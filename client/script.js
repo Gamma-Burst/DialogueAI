@@ -71,9 +71,10 @@ const handleSubmit = async (e) => {
   e.preventDefault()
 
   const data = new FormData(form)
+  const previousMessage = data.get('prompt')
 
   // user's chatstripe
-  chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
+  chatContainer.innerHTML += chatStripe(false, previousMessage)
 
   // to clear the textarea input 
   form.reset()
@@ -86,6 +87,108 @@ const handleSubmit = async (e) => {
   chatContainer.scrollTop = chatContainer.scrollHeight
 
   // specific message div 
+  const messageDiv = document.getElementById(uniqueId)
+
+  // messageDiv.innerHTML = "..."
+  loader(messageDiv)
+
+  const response = await fetch('https://codex-1z8x.onrender.com', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt: previousMessage,
+    }),
+  })
+
+  clearInterval(loadInterval)
+  messageDiv.innerHTML = ' '
+
+  if (response.ok) {
+    const data = await response.json()
+    const parsedData = data.bot.trim() // trims any trailing spaces/'\n'
+
+    typeText(messageDiv, parsedData)
+
+    storeConversation() // Store the conversation in local storage after each message is sent/received
+  } else {
+    const err = await response.text()
+
+    messageDiv.innerHTML = 'Something went wrong'
+    alert(err)
+  }
+}
+
+form.addEventListener('submit', handleSubmit)
+form.addEventListener('keyup', (e) => {
+  if (e.keyCode === 13) {
+    handleSubmit(e)
+  }
+})
+
+// Restore the conversation from local storage on page load
+const conversation = localStorage.getItem('conversation')
+if (conversation) {
+  chatContainer.innerHTML = conversation
+
+  // Scroll to the bottom of the chat container
+  chatContainer.scrollTop = chatContainer.scrollHeight
+
+  // Loop through each message div and apply the typing effect to the bot's messages
+  const botMessages = chatContainer.querySelectorAll('.ai .message')
+  botMessages.forEach((message) => {
+    const uniqueId = message.id
+    loader(message)
+
+    setTimeout(async () => {
+      const response = await fetch('https://codex-1z8x.onrender.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: message.textContent,
+        }),
+      })
+
+      clearInterval(loadInterval)
+      message.innerHTML = ' '
+
+      if (response.ok) {
+        const data = await response.json()
+        const parsedData = data.bot.trim() // trims any trailing spaces/'\n'
+
+        typeText(message, parsedData)
+      } else {
+        const err = await response.text()
+
+        message.innerHTML = 'Something went wrong'
+        alert(err)
+      }
+    }, 1000)
+  })
+}
+
+const handleSubmit = async (e) => {
+  e.preventDefault()
+
+  const data = new FormData(form)
+
+  // user's chatstripe
+  chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
+
+  // to clear the textarea input
+  form.reset()
+
+  // bot's chatstripe
+  const uniqueId = generateUniqueId()
+  chatContainer.innerHTML += chatStripe(true, ' ', uniqueId)
+
+  // to focus scroll to the bottom
+  chatContainer.scrollTop = chatContainer.scrollHeight
+
+  // specific message div
   const messageDiv = document.getElementById(uniqueId)
 
   // messageDiv.innerHTML = "..."
@@ -125,9 +228,3 @@ form.addEventListener('keyup', (e) => {
     handleSubmit(e)
   }
 })
-
-// Restore the conversation from local storage on page load
-const conversation = localStorage.getItem('conversation')
-if (conversation) {
-  chatContainer.innerHTML = conversation
-}
