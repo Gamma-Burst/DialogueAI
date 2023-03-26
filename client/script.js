@@ -1,4 +1,3 @@
-
 import bot from './assets/bot.svg'
 import user from './assets/user.svg'
 
@@ -126,11 +125,30 @@ const handleSubmit = async (e) => {
   }
 }
 
-
-
 form.addEventListener('submit', handleSubmit)
+
 form.addEventListener('keyup', (e) => {
     if (e.keyCode === 13) {
-        handleSubmit(e)
+        handleSubmit(e);
     }
-})
+});
+
+// On page load, display all previous conversations
+conversations.forEach((conversation) => {
+    chatContainer.innerHTML += chatStripe(false, conversation.user);
+    chatContainer.innerHTML += chatStripe(true, " ");
+    const messageDiv = chatContainer.lastElementChild.querySelector('.message');
+    loader(messageDiv);
+    setTimeout(() => {
+        messageDiv.innerHTML = "";
+        typeText(messageDiv, conversation.bot);
+    }, 1000);
+});
+
+// Clear conversations from local storage
+const clearBtn = document.querySelector('#clear_btn');
+clearBtn.addEventListener('click', () => {
+    localStorage.removeItem('conversations');
+    conversations = [];
+    chatContainer.innerHTML = "";
+});
