@@ -1,47 +1,47 @@
-import bot from './assets/bot.svg';
-import user from './assets/user.svg';
+import bot from './assets/bot.svg'
+import user from './assets/user.svg'
 
 const form = document.querySelector('#chat_form');
-const chatContainer = document.querySelector('#chat_container');
+const chatContainer = document.querySelector('#chat_container')
 
-let loadInterval;
+let loadInterval
 
 function loader(element) {
-  element.textContent = '';
+  element.textContent = ''
 
   loadInterval = setInterval(() => {
     // Update the text content of the loading indicator
-    element.textContent += '.';
+    element.textContent += '.'
 
     // If the loading indicator has reached three dots, reset it
     if (element.textContent === '....') {
-      element.textContent = '';
+      element.textContent = ''
     }
-  }, 300);
+  }, 300)
 }
 
 function typeText(element, text) {
-  let index = 0;
+  let index = 0
 
   let interval = setInterval(() => {
     if (index < text.length) {
-      element.innerHTML += text.charAt(index);
-      index++;
+      element.innerHTML += text.charAt(index)
+      index++
     } else {
-      clearInterval(interval);
+      clearInterval(interval)
     }
-  }, 20);
+  }, 20)
 }
 
 // generate unique ID for each message div of bot
 // necessary for typing text effect for that specific reply
 // without unique ID, typing text will work on every element
 function generateUniqueId() {
-  const timestamp = Date.now();
-  const randomNumber = Math.random();
-  const hexadecimalString = randomNumber.toString(16);
+  const timestamp = Date.now()
+  const randomNumber = Math.random()
+  const hexadecimalString = randomNumber.toString(16)
 
-  return `id-${timestamp}-${hexadecimalString}`;
+  return `id-${timestamp}-${hexadecimalString}`
 }
 
 function chatStripe(isAi, value, uniqueId) {
@@ -59,37 +59,37 @@ function chatStripe(isAi, value, uniqueId) {
         </div>
     </div>
   `
-  );
+  )
 }
 
 function storeConversation() {
-  const conversation = chatContainer.innerHTML;
-  localStorage.setItem('conversation', conversation);
+  const conversation = chatContainer.innerHTML
+  localStorage.setItem('conversation', conversation)
 }
 
 const handleSubmit = async (e) => {
-  e.preventDefault();
+  e.preventDefault()
 
-  const data = new FormData(form);
+  const data = new FormData(form)
 
   // user's chatstripe
-  chatContainer.innerHTML += chatStripe(false, data.get('prompt'));
+  chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
 
   // to clear the textarea input
-  form.reset();
+  form.reset()
 
   // bot's chatstripe
-  const uniqueId = generateUniqueId();
-  chatContainer.innerHTML += chatStripe(true, ' ', uniqueId);
+  const uniqueId = generateUniqueId()
+  chatContainer.innerHTML += chatStripe(true, ' ', uniqueId)
 
   // to focus scroll to the bottom
-  chatContainer.scrollTop = chatContainer.scrollHeight;
+  chatContainer.scrollTop = chatContainer.scrollHeight
 
   // specific message div
-  const messageDiv = document.getElementById(uniqueId);
+  const messageDiv = document.getElementById(uniqueId)
 
   // messageDiv.innerHTML = "..."
-  loader(messageDiv);
+  loader(messageDiv)
 
   const response = await fetch('https://codex-1z8x.onrender.com', {
     method: 'POST',
@@ -99,36 +99,36 @@ const handleSubmit = async (e) => {
     body: JSON.stringify({
       prompt: data.get('prompt'),
     }),
-  });
+  })
 
-  clearInterval(loadInterval);
-  messageDiv.innerHTML = ' ';
+  clearInterval(loadInterval)
+  messageDiv.innerHTML = ' '
 
   if (response.ok) {
-    const data = await response.json();
-    const parsedData = data.bot.trim(); // trims any trailing spaces/'\n'
+    const data = await response.json()
+    const parsedData = data.bot.trim() // trims any trailing spaces/'\n'
 
-    typeText(messageDiv, parsedData);
+    typeText(messageDiv, parsedData)
 
-    storeConversation(); // Store the conversation in local storage after each message is sent/received
+    storeConversation() // Store the conversation in local storage after each message is sent/received
   } else {
-    const err = await response.text();
+    const err = await response.text()
 
-    messageDiv.innerHTML = 'Something went wrong';
-    alert(err);
+    messageDiv.innerHTML = 'Something went wrong'
+    alert(err)
   }
-};
+}
 
-form.addEventListener('submit', handleSubmit);
+form.addEventListener('submit', handleSubmit)
 form.addEventListener('keyup', (e) => {
   if (e.keyCode === 13) {
-    handleSubmit(e);
+    handleSubmit(e)
   }
-});
+})
 
 // Restore the conversation from local storage on page load
 window.addEventListener('load', () => {
-  const conversation = getConversationFromLocalStorage();
+  const conversation = JSON.parse(localStorage.getItem('conversation')) || [];
   conversation.forEach(({ isUser, message }) => {
     if (isUser) {
       addMessageToChat(message, 'user');
@@ -138,49 +138,83 @@ window.addEventListener('load', () => {
   });
 });
 
-// Get the conversation from local storage
-function getConversationFromLocalStorage() {
-  try {
-    const conversation = JSON.parse(localStorage.getItem('conversation')) || [];
-    return conversation;
-  } catch (e) {
-    console.error('Error getting conversation from local storage', e);
-    return [];
-  }
+// Save the conversation to local storage
+function saveConversationToLocalStorage() {
+  const conversation = getConversationFromChat();
+  localStorage.setItem('conversation', JSON.stringify(conversation));
 }
 
-// Add message to chat
-function addMessageToChat(message, sender) {
-  const chatContainer = document.getElementById('chat-container');
-  const messageElement = document.createElement('div');
-  messageElement.className = `message ${sender}`;
-  messageElement.innerText = message;
-  chatContainer.appendChild(messageElement);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-
+// Send a message to the bot
+function sendMessageToBot(message) {
+  // Send the message to the server using fetch or XHR
+  // ...
+  // When the response comes back, add the bot's response to the chat
+  const botResponse = 'This is a dummy response from the bot';
+  addMessageToChat(botResponse, 'bot');
   // Save the conversation to local storage
-  const conversation = getConversationFromLocalStorage();
-  conversation.push({ isUser: sender === 'user', message });
-  try {
-    localStorage.setItem('conversation', JSON.stringify(conversation));
-  } catch (e) {
-    console.error('Error saving conversation to local storage', e);
-  }
+  saveConversationToLocalStorage();
 }
-// Declare conversation array to store messages
-let conversation = [];
+
+// Add a message to the chat
+function addMessageToChat(message, sender) {
+  // Create a new message element
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+  messageElement.classList.add(sender);
+
+  // Set the message text
+  const messageText = document.createElement('div');
+  messageText.classList.add('message-text');
+  messageText.textContent = message;
+  messageElement.appendChild(messageText);
+
+  // Add the message element to the chat
+  const chat = document.querySelector('#chat');
+  chat.appendChild(messageElement);
+}
+
+// Get the conversation from the chat
+function getConversationFromChat() {
+  const conversation = [];
+  const messages = document.querySelectorAll('.message');
+  messages.forEach((message) => {
+    const isUser = message.classList.contains('user');
+    const messageText = message.querySelector('.message-text').textContent;
+    conversation.push({ isUser, message: messageText });
+  });
+  return conversation;
+}
+
+// Attach a submit event listener to the form
+form = document.querySelector('form');
+form.addEventListener('submit', (event) => {
+  // Prevent the default form submission behavior
+  event.preventDefault();
+
+  // Get the user's message from the input field
+  const input = document.querySelector('#input');
+  const message = input.value.trim();
+
+  // Add the user's message to the chat
+  addMessageToChat(message, 'user');
+
+  // Send the message to the bot
+  sendMessageToBot(message);
+
+  // Clear the input field
+  input.value = '';
+});let lastUserMessage = '';
 
 const handleSubmit = async (e) => {
   e.preventDefault();
 
   const data = new FormData(form);
 
-  // Add user's question to conversation array
-  const userQuestion = data.get('prompt');
-  conversation.push({ sender: 'user', message: userQuestion });
+  const userMessage = data.get('prompt'); // Store the user's message in a variable
+  lastUserMessage = userMessage; // Update the variable to store the latest user message
 
   // user's chatstripe
-  chatContainer.innerHTML += chatStripe(false, userQuestion);
+  chatContainer.innerHTML += chatStripe(false, userMessage);
 
   // to clear the textarea input
   form.reset();
@@ -204,7 +238,7 @@ const handleSubmit = async (e) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      prompt: userQuestion,
+      prompt: userMessage,
     }),
   });
 
@@ -215,8 +249,10 @@ const handleSubmit = async (e) => {
     const data = await response.json();
     const parsedData = data.bot.trim(); // trims any trailing spaces/'\n'
 
-    // Add bot's response to conversation array
-    conversation.push({ sender: 'bot', message: parsedData });
+    // Check if the user is asking the same question again
+    if (parsedData.toLowerCase() === lastUserMessage.toLowerCase()) {
+      parsedData = "You just asked me that!";
+    }
 
     typeText(messageDiv, parsedData);
 
@@ -228,37 +264,3 @@ const handleSubmit = async (e) => {
     alert(err);
   }
 };
-
-// Store conversation data in local storage
-function storeConversation() {
-  localStorage.setItem('conversation', JSON.stringify(conversation));
-}
-
-// Load conversation data from local storage on page load
-window.addEventListener('load', () => {
-  const conversationData = localStorage.getItem('conversation');
-
-  if (conversationData) {
-    conversation = JSON.parse(conversationData);
-
-    conversation.forEach(({ sender, message }) => {
-      addMessageToChat(message, sender);
-    });
-  }
-});
-
-// Add message to chat and conversation array
-function addMessageToChat(message, sender) {
-  const chatContainer = document.getElementById('chat-container');
-  const messageElement = document.createElement('div');
-  messageElement.className = `message ${sender}`;
-  messageElement.innerText = message;
-  chatContainer.appendChild(messageElement);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-
-  // Add message to conversation array
-  conversation.push({ sender, message });
-
-  // Save the conversation to local storage
-  storeConversation();
-}
