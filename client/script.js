@@ -205,8 +205,7 @@ form.addEventListener('submit', (event) => {
   input.value = '';
 });let lastUserMessage = '';
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+
 
   const data = new FormData(form);
 
@@ -263,4 +262,4 @@ const handleSubmit = async (e) => {
     messageDiv.innerHTML = 'Something went wrong';
     alert(err);
   }
-};
+
