@@ -167,3 +167,98 @@ function addMessageToChat(message, sender) {
     console.error('Error saving conversation to local storage', e);
   }
 }
+// Declare conversation array to store messages
+let conversation = [];
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const data = new FormData(form);
+
+  // Add user's question to conversation array
+  const userQuestion = data.get('prompt');
+  conversation.push({ sender: 'user', message: userQuestion });
+
+  // user's chatstripe
+  chatContainer.innerHTML += chatStripe(false, userQuestion);
+
+  // to clear the textarea input
+  form.reset();
+
+  // bot's chatstripe
+  const uniqueId = generateUniqueId();
+  chatContainer.innerHTML += chatStripe(true, ' ', uniqueId);
+
+  // to focus scroll to the bottom
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  // specific message div
+  const messageDiv = document.getElementById(uniqueId);
+
+  // messageDiv.innerHTML = "..."
+  loader(messageDiv);
+
+  const response = await fetch('https://codex-1z8x.onrender.com', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt: userQuestion,
+    }),
+  });
+
+  clearInterval(loadInterval);
+  messageDiv.innerHTML = ' ';
+
+  if (response.ok) {
+    const data = await response.json();
+    const parsedData = data.bot.trim(); // trims any trailing spaces/'\n'
+
+    // Add bot's response to conversation array
+    conversation.push({ sender: 'bot', message: parsedData });
+
+    typeText(messageDiv, parsedData);
+
+    storeConversation(); // Store the conversation in local storage after each message is sent/received
+  } else {
+    const err = await response.text();
+
+    messageDiv.innerHTML = 'Something went wrong';
+    alert(err);
+  }
+};
+
+// Store conversation data in local storage
+function storeConversation() {
+  localStorage.setItem('conversation', JSON.stringify(conversation));
+}
+
+// Load conversation data from local storage on page load
+window.addEventListener('load', () => {
+  const conversationData = localStorage.getItem('conversation');
+
+  if (conversationData) {
+    conversation = JSON.parse(conversationData);
+
+    conversation.forEach(({ sender, message }) => {
+      addMessageToChat(message, sender);
+    });
+  }
+});
+
+// Add message to chat and conversation array
+function addMessageToChat(message, sender) {
+  const chatContainer = document.getElementById('chat-container');
+  const messageElement = document.createElement('div');
+  messageElement.className = `message ${sender}`;
+  messageElement.innerText = message;
+  chatContainer.appendChild(messageElement);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  // Add message to conversation array
+  conversation.push({ sender, message });
+
+  // Save the conversation to local storage
+  storeConversation();
+}
