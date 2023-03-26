@@ -63,6 +63,9 @@ function chatStripe(isAi, value, uniqueId) {
     )
 }
 
+// Load conversations from local storage on page load
+let conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+
 const handleSubmit = async (e) => {
   e.preventDefault()
 
@@ -99,13 +102,22 @@ const handleSubmit = async (e) => {
   })
 
   clearInterval(loadInterval)
-  messageDiv.innerHTML = " "
 
   if (response.ok) {
       const data = await response.json();
       const parsedData = data.bot.trim() // trims any trailing spaces/'\n' 
 
-      typeText(messageDiv, parsedData)
+      if (parsedData !== "") {
+        // store the user message and bot's response in an object and push it to the conversations array
+        const conversation = { user: userMessage, bot: parsedData };
+        conversations.push(conversation);
+
+        // save conversations to local storage
+        localStorage.setItem('conversations', JSON.stringify(conversations));
+      }
+
+      messageDiv.innerHTML = " ";
+      typeText(messageDiv, parsedData);
   } else {
       const err = await response.text()
 
@@ -113,6 +125,7 @@ const handleSubmit = async (e) => {
       alert(err)
   }
 }
+
 
 
 form.addEventListener('submit', handleSubmit)
