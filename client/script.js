@@ -62,93 +62,59 @@ function chatStripe(isAi, value, uniqueId) {
     )
 }
 
-// Load conversations from local storage on page load
-let conversations = JSON.parse(localStorage.getItem('conversations')) || [];
-
 const handleSubmit = async (e) => {
-  e.preventDefault()
+    e.preventDefault()
 
-  const data = new FormData(form)
+    const data = new FormData(form)
 
-  // user's chatstripe
-  const userMessage = data.get('prompt')
-  chatContainer.innerHTML += chatStripe(false, userMessage)
+    // user's chatstripe
+    chatContainer.innerHTML += chatStripe(false, data.get('prompt'))
 
-  // to clear the textarea input 
-  form.reset()
+    // to clear the textarea input 
+    form.reset()
 
-  // bot's chatstripe
-  const uniqueId = generateUniqueId()
-  chatContainer.innerHTML += chatStripe(true, " ", uniqueId)
+    // bot's chatstripe
+    const uniqueId = generateUniqueId()
+    chatContainer.innerHTML += chatStripe(true, " ", uniqueId)
 
-  // to focus scroll to the bottom 
-  chatContainer.scrollTop = chatContainer.scrollHeight;
+    // to focus scroll to the bottom 
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  // specific message div 
-  const messageDiv = document.getElementById(uniqueId)
+    // specific message div 
+    const messageDiv = document.getElementById(uniqueId)
 
-  // messageDiv.innerHTML = "..."
-  loader(messageDiv)
+    // messageDiv.innerHTML = "..."
+    loader(messageDiv)
 
-  const response = await fetch('https://codex-1z8x.onrender.com', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-          prompt: userMessage // use user's input for generating the bot's response
-      })
-  })
+    const response = await fetch('https://codex-1z8x.onrender.com', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            prompt: data.get('prompt')
+        })
+    })
 
-  clearInterval(loadInterval)
+    clearInterval(loadInterval)
+    messageDiv.innerHTML = " "
 
-  if (response.ok) {
-      const data = await response.json();
-      const parsedData = data.bot.trim() // trims any trailing spaces/'\n' 
+    if (response.ok) {
+        const data = await response.json();
+        const parsedData = data.bot.trim() // trims any trailing spaces/'\n' 
 
-      if (parsedData !== "") {
-        // store the user message and bot's response in an object and push it to the conversations array
-        const conversation = { user: userMessage, bot: parsedData };
-        conversations.push(conversation);
+        typeText(messageDiv, parsedData)
+    } else {
+        const err = await response.text()
 
-        // save conversations to local storage
-        localStorage.setItem('conversations', JSON.stringify(conversations));
-      }
-
-      messageDiv.innerHTML = " ";
-      typeText(messageDiv, parsedData);
-  } else {
-      const err = await response.text()
-
-      messageDiv.innerHTML = "Something went wrong"
-      alert(err)
-  }
+        messageDiv.innerHTML = "Something went wrong"
+        alert(err)
+    }
 }
 
 form.addEventListener('submit', handleSubmit)
-
 form.addEventListener('keyup', (e) => {
     if (e.keyCode === 13) {
-        handleSubmit(e);
+        handleSubmit(e)
     }
-});
-
-// On page load, display all previous conversations
-conversations.forEach((conversation) => {
-    chatContainer.innerHTML += chatStripe(false, conversation.user);
-    chatContainer.innerHTML += chatStripe(true, " ");
-    const messageDiv = chatContainer.lastElementChild.querySelector('.message');
-    loader(messageDiv);
-    setTimeout(() => {
-        messageDiv.innerHTML = "";
-        typeText(messageDiv, conversation.bot);
-    }, 1000);
-});
-
-// Clear conversations from local storage
-const clearBtn = document.querySelector('#clear_btn');
-clearBtn.addEventListener('click', () => {
-    localStorage.removeItem('conversations');
-    conversations = [];
-    chatContainer.innerHTML = "";
-});
+})
