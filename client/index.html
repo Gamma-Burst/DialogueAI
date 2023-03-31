@@ -8,25 +8,24 @@
     <link rel="icon" type="image/svg+xml" href="favicon.ico">
   </head>
   <body>
-    <header>
-      <h1>ChatGPT</h1>
-    </header>
+    <div class="chatbox-container">
+      <div class="chatbox-header">
+        <h1>ChatGPT</h1>
+        <button class="close-button" aria-label="Close Chatbox">&#10006;</button>
+      </div>
 
-    <main>
-      <div class="chat-container">
-        <div id="chat_history" class="chat-history" role="region" aria-label="Chat History">
+      <div class="chatbox-content">
+        <div class="chat-history" role="region" aria-label="Chat History">
           <!-- Chat history goes here -->
         </div>
 
-        <div id="chat_container" class="chat-input" role="region" aria-label="Chat Input">
-          <form id="chat_form">
-            <label for="prompt" class="sr-only">Ask ChatGPT</label>
-            <textarea name="prompt" id="prompt" rows="1" cols="1" placeholder="Ask ChatGPT..."></textarea>
-            <button type="submit" aria-label="Send Message"><img src="assets/send.svg" alt="send"></button>
-          </form>
-        </div>
+        <form id="chat_form" class="chat-input" role="region" aria-label="Chat Input">
+          <label for="prompt" class="sr-only">Ask ChatGPT</label>
+          <textarea name="prompt" id="prompt" rows="1" cols="1" placeholder="Ask ChatGPT..."></textarea>
+          <button type="submit" aria-label="Send Message"><img src="assets/send.svg" alt="send"></button>
+        </form>
       </div>
-    </main>
+    </div>
 
     <script type="module" src="script.js"></script>
   </body>
