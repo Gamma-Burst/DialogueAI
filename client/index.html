@@ -1,22 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Codex - Your AI</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT - Your AI Chatbot</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.ico">
   </head>
   <body>
-    <div id="app">
-      <div id="chat_container"></div>
+    <header>
+      <h1>ChatGPT</h1>
+    </header>
 
-      <form id="chat_form">
-        <textarea name="prompt" rows="1" cols="1" placeholder="Ask Codex..."></textarea>
-        <button type="submit"><img src="assets/send.svg" alt="send" /></button>
+    <main>
+      <div id="chat_container" role="region" aria-label="Chat History"></div>
+
+      <form id="chat_form" aria-label="Chat Input">
+        <label for="prompt" class="sr-only">Ask ChatGPT</label>
+        <textarea name="prompt" id="prompt" rows="1" cols="1" placeholder="Ask ChatGPT..."></textarea>
+        <button type="submit" aria-label="Send Message"><img src="assets/send.svg" alt="send"></button>
       </form>
-    </div>
+    </main>
 
     <script type="module" src="script.js"></script>
   </body>
 </html>
+
