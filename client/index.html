@@ -13,16 +13,21 @@
     </header>
 
     <main>
-      <div id="chat_container" role="region" aria-label="Chat History"></div>
+      <div class="chat-container">
+        <div id="chat_history" class="chat-history" role="region" aria-label="Chat History">
+          <!-- Chat history goes here -->
+        </div>
 
-      <form id="chat_form" aria-label="Chat Input">
-        <label for="prompt" class="sr-only">Ask ChatGPT</label>
-        <textarea name="prompt" id="prompt" rows="1" cols="1" placeholder="Ask ChatGPT..."></textarea>
-        <button type="submit" aria-label="Send Message"><img src="assets/send.svg" alt="send"></button>
-      </form>
+        <div id="chat_container" class="chat-input" role="region" aria-label="Chat Input">
+          <form id="chat_form">
+            <label for="prompt" class="sr-only">Ask ChatGPT</label>
+            <textarea name="prompt" id="prompt" rows="1" cols="1" placeholder="Ask ChatGPT..."></textarea>
+            <button type="submit" aria-label="Send Message"><img src="assets/send.svg" alt="send"></button>
+          </form>
+        </div>
+      </div>
     </main>
 
     <script type="module" src="script.js"></script>
   </body>
 </html>
-
