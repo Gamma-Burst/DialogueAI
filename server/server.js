@@ -1,9 +1,10 @@
-import express from 'express';
-import * as dotenv from 'dotenv';
-import cors from 'cors';
-import { Configuration, OpenAIApi } from 'openai';
+import express from 'express'
+import * as dotenv from 'dotenv'
+import cors from 'cors'
+import { Configuration, OpenAIApi } from 'openai'
+import fs from 'fs'
 
-dotenv.config();
+dotenv.config()
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,17 +12,24 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const app = express()
+app.use(cors())
+app.use(express.json())
+
+const MEMORY_FILE_PATH = 'memory.txt'
 
 let memory = [];
+
+// Load memory from file if it exists
+if (fs.existsSync(MEMORY_FILE_PATH)) {
+  memory = fs.readFileSync(MEMORY_FILE_PATH).toString().split('\n')
+}
 
 app.get('/', async (req, res) => {
   res.status(200).send({
     message: 'Hello from CodeX!'
-  });
-});
+  })
+})
 
 app.post('/', async (req, res) => {
   try {
@@ -45,22 +53,17 @@ app.post('/', async (req, res) => {
     // Add bot response to memory
     memory.push(response.data.choices[0].text);
 
+    // Save memory to file
+    fs.writeFileSync(MEMORY_FILE_PATH, memory.join('\n'))
+
     res.status(200).send({
       bot: response.data.choices[0].text
     });
 
   } catch (error) {
-    console.error(error);
+    console.error(error)
     res.status(500).send(error || 'Something went wrong');
   }
-});
+})
 
-// Endpoint to clear memory
-app.delete('/', async (req, res) => {
-  memory = [];
-  res.status(200).send({
-    message: 'Memory cleared'
-  });
-});
-
-app.listen(5000, () => console.log('AI server started on http://localhost:5000'));
+app.listen(5000, () => console.log('AI server started on http://localhost:5000'))
