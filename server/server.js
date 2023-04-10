@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
-const OpenAIChat = require('./openai') // assuming the file is in the same directory
+const OpenAIChat = require('./openai')
 
 dotenv.config()
 
