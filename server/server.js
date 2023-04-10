@@ -2,7 +2,6 @@ import express from 'express'
 import * as dotenv from 'dotenv'
 import cors from 'cors'
 import { Configuration, OpenAIApi } from 'openai'
-import fs from 'fs'
 
 dotenv.config()
 
@@ -16,14 +15,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-const MEMORY_FILE_PATH = 'memory.txt'
-
 let memory = [];
-
-// Load memory from file if it exists
-if (fs.existsSync(MEMORY_FILE_PATH)) {
-  memory = fs.readFileSync(MEMORY_FILE_PATH).toString().split('\n')
-}
 
 app.get('/', async (req, res) => {
   res.status(200).send({
@@ -53,8 +45,13 @@ app.post('/', async (req, res) => {
     // Add bot response to memory
     memory.push(response.data.choices[0].text);
 
-    // Save memory to file
-    fs.writeFileSync(MEMORY_FILE_PATH, memory.join('\n'))
+    // Check if the user has provided their name
+    const namePrompt = memory.find(prompt => prompt.toLowerCase().includes("my name is"));
+    if (namePrompt) {
+      const name = namePrompt.toLowerCase().split("my name is")[1].trim();
+      // Add the user's name to memory
+      memory.push(`My name is ${name}`);
+    }
 
     res.status(200).send({
       bot: response.data.choices[0].text
