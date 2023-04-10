@@ -1,59 +1,48 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const OpenAIChat = require('./openai');
+import express from 'express'
+import * as dotenv from 'dotenv'
+import cors from 'cors'
+import { Configuration, OpenAIApi } from 'openai'
 
-dotenv.config();
+dotenv.config()
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-const openaiChat = new OpenAIChat(process.env.OPENAI_API_KEY);
+const openai = new OpenAIApi(configuration);
 
-// Define chat history object to store all questions and responses
-const chatHistory = {
-  questions: [],
-  responses: []
-};
-
-// Define function to add question and response to chat history object
-function addToChatHistory(question, response) {
-  chatHistory.questions.push(question);
-  chatHistory.responses.push(response);
-}
+const app = express()
+app.use(cors())
+app.use(express.json())
 
 app.get('/', async (req, res) => {
   res.status(200).send({
     message: 'Hello from CodeX!'
-  });
-});
+  })
+})
 
-app.post('/api/chat', async (req, res) => {
-  const input = req.body.input;
+app.post('/', async (req, res) => {
+  try {
+    const prompt = req.body.prompt;
 
-  // If chat history is not empty, check if the current input matches a previous question
-  if (chatHistory.questions.length > 0) {
-    const prevIndex = chatHistory.questions.indexOf(input.toLowerCase());
-    if (prevIndex !== -1) {
-      const prevResponse = chatHistory.responses[prevIndex];
-      res.json({ response: prevResponse });
-      return;
-    }
+    const response = await openai.createCompletion({
+      model: "davinci",
+      prompt: `${prompt}`,
+      temperature: 0, // Higher values means the model will take more risks.
+      max_tokens: 3000, // The maximum number of tokens to generate in the completion. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+      top_p: 1, // alternative to sampling with temperature, called nucleus sampling
+      frequency_penalty: 0.5, // Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+      presence_penalty: 0, // Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+    });
+
+    res.status(200).send({
+      bot: response.data.choices[0].text
+    });
+
+  } catch (error) {
+    console.error(error)
+    res.status(500).send(error || 'Something went wrong');
   }
+})
 
-  // If input is not a previous question, generate response using OpenAI API
-  const response = await openaiChat.getResponse(input);
-
-  // Add question and response to chat history
-  addToChatHistory(input.toLowerCase(), response);
-
-  // Return response in JSON format
-  res.json({ response: response });
-});
-
-app.get('/api/chat-history', (req, res) => {
-  res.json({ chatHistory: chatHistory });
-});
-
-app.listen(5000, () => console.log('AI server started on http://localhost:5000'));
+app.listen(5000, () => console.log('AI server started on http://localhost:5000'))
