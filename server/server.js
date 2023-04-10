@@ -1,34 +1,40 @@
-const express = require('express')
-const cors = require('cors')
-const dotenv = require('dotenv')
-const OpenAIChat = require('./openai')
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const OpenAIChat = require('./openai');
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-const openaiChat = new OpenAIChat(process.env.OPENAI_API_KEY)
+const openaiChat = new OpenAIChat(process.env.OPENAI_API_KEY);
 
-app.get('/', async (req, res) => {
-  res.status(200).send({
-    message: 'Hello from CodeX!'
-  })
-})
+const chatHistory = [];
 
-app.post('/', async (req, res) => {
-  try {
-    const prompt = req.body.prompt
-    const response = await openaiChat.getResponse(prompt)
+// Function to generate bot response
+async function generateResponse(input) {
+  // Send user input to OpenAI API to get response
+  const response = await openaiChat.getResponse(input);
 
-    res.status(200).send({
-      bot: response
-    })
-  } catch (error) {
-    console.error(error)
-    res.status(500).send(error || 'Something went wrong')
-  }
-})
+  // Add user input and bot response to chat history
+  chatHistory.push({ user: input, bot: response });
 
-app.listen(5000, () => console.log('AI server started on http://localhost:5000'))
+  // Return the bot response
+  return response;
+}
+
+// Route to handle chat requests
+app.post('/api/chat', async (req, res) => {
+  // Get user input from request body
+  const userInput = req.body.input;
+
+  // Generate response from OpenAI API
+  const botResponse = await generateResponse(userInput);
+
+  // Return bot response in JSON format
+  res.json({ response: botResponse });
+});
+
+app.listen(5000, () => console.log('AI server started on http://localhost:5000'));
