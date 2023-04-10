@@ -38,6 +38,8 @@ app.post('/', async (req, res) => {
       top_p: 1, // alternative to sampling with temperature, called nucleus sampling
       frequency_penalty: 0.5, // Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
       presence_penalty: 0, // Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+      stop: ["\n"], // Stop generating tokens at the first newline character
+      ...memory.length && { context: memory.slice(0, -1).join("\n") }, // Pass previous context if memory is not empty
     });
 
     // Add bot response to memory
